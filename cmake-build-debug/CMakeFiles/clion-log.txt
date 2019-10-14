@@ -1,0 +1,31 @@
+"C:\Program Files\JetBrains\CLion 2019.2.4\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/CMake/bin/cmake.exe" -DCMAKE_C_COMPILER=C:/MinGW/bin/g++.exe -DCMAKE_CXX_COMPILER=C:/MinGW/bin/g++.exe -G "CodeBlocks - MinGW Makefiles" C:\cygwin64\home\Aaron\cs130
+-- The C compiler identification is unknown
+-- The CXX compiler identification is GNU 8.2.0
+-- Check for working C compiler: C:/MinGW/bin/g++.exe
+-- Check for working C compiler: C:/MinGW/bin/g++.exe -- broken
+CMake Error at C:/Program Files/JetBrains/CLion 2019.2.4/bin/cmake/win/share/cmake-3.15/Modules/CMakeTestCCompiler.cmake:60 (message):
+  The C compiler
+
+    "C:/MinGW/bin/g++.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: C:/cygwin64/home/Aaron/cs130/cmake-build-debug/CMakeFiles/CMakeTmp
+    
+    Run Build Command(s):C:/PROGRA~1/CMake/bin/cmake.exe cmTC_929a3/fast && CMake Error: The source directory "C:/cygwin64/home/Aaron/cs130/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_929a3/fast" does not exist.
+    Specify --help for usage, or press the help button on the CMake GUI.
+    
+    
+
+  
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+See also "C:/cygwin64/home/Aaron/cs130/cmake-build-debug/CMakeFiles/CMakeOutput.log".
+See also "C:/cygwin64/home/Aaron/cs130/cmake-build-debug/CMakeFiles/CMakeError.log".

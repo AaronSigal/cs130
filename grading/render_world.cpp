@@ -22,15 +22,42 @@ Render_World::~Render_World()
 // to ensure that hit.dist>=small_t.
 Hit Render_World::Closest_Intersection(const Ray& ray)
 {
-    TODO;
-    return {};
+    double min_t = std::numeric_limits<double>::max(); // Set min_t to the largest possible double value
+
+
+    Hit closest_hit;
+
+    for (auto& obj : objects) { // For each object in the world
+
+        for (int i = 0; i < obj->number_parts; i++) { // For each part on a given object
+            Hit collision = obj -> Intersection(ray, i); // Get a hit
+        
+            if (collision.dist < min_t && collision.dist > small_t) { // Checks if the hit is closer than the previous-closest hit. Ignores if the hit is itself
+                min_t = collision.dist;
+                closest_hit = collision;
+
+            }
+        }
+    }
+
+    return closest_hit;
 }
 
 // set up the initial view ray and call
 void Render_World::Render_Pixel(const ivec2& pixel_index)
 {
-    TODO; // set up the initial view ray here
-    Ray ray;
+
+    vec3 p2 = camera.World_Position(pixel_index);
+
+    vec3 direction_raw;
+    
+    // Build the direction vector from p1 and p2;
+    for (int i = 0; i < 3; i++)
+        direction_raw[i] = p2[i] - camera.position[i];
+    
+    vec3 direction = direction_raw.normalized();
+
+    Ray ray(camera.position, direction); // Initialize the ray using the camera position as the end point and the direction vector calculated earlier.
     vec3 color=Cast_Ray(ray,1);
     camera.Set_Pixel(pixel_index,Pixel_Color(color));
 }

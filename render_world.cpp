@@ -22,7 +22,6 @@ Render_World::~Render_World()
 // to ensure that hit.dist>=small_t.
 Hit Render_World::Closest_Intersection(const Ray& ray)
 {
-    double T_MIN_LIMIT = 0.01; // The minimum allowable distance for the hit to be counted
     double min_t = std::numeric_limits<double>::max(); // Set min_t to the largest possible double value
 
 
@@ -33,7 +32,7 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
         for (int i = 0; i < obj->number_parts; i++) { // For each part on a given object
             Hit collision = obj -> Intersection(ray, i); // Get a hit
         
-            if (collision.dist < min_t && collision.dist > T_MIN_LIMIT) { // Checks if the hit is closer than the previous-closest hit. Ignores if the hit is itself
+            if (collision.dist < min_t && collision.dist > small_t) { // Checks if the hit is closer than the previous-closest hit. Ignores if the hit is itself
                 min_t = collision.dist;
                 closest_hit = collision;
 
