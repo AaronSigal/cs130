@@ -8,6 +8,7 @@ class Sphere : public Object
     double radius;
 
 public:
+    Sphere() {}
     Sphere(const vec3& center_input,double radius_input)
         :center(center_input),radius(radius_input)
     {}

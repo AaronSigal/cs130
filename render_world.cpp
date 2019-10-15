@@ -5,6 +5,8 @@
 #include "ray.h"
 
 extern bool disable_hierarchy;
+const Object* empty_obj_ptr;
+const Hit NO_INTERSECTION(empty_obj_ptr, -1, -1);
 
 Render_World::Render_World()
     :background_shader(0),ambient_intensity(0),enable_shadows(true),
