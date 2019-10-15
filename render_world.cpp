@@ -77,7 +77,27 @@ void Render_World::Render()
 vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 {
     vec3 color;
-    TODO; // determine the color here
+
+    Hit ht = Closest_Intersection(ray);
+    
+    TODO; // Confirm that this is the correct way to check
+    if (ht.dist < std::numeric_limits<double>::max() ) { // Checks if there was a valid intersection.
+        
+        TODO; // Get the color from the material shader of the intersected object
+        color = ht.object -> material_shader -> Shade_Surface(ray, 
+                                                                 ray.endpoint + ray.direction,
+                                                                 ht.object -> Normal(ray.endpoint + ray.direction, ht.part), 
+                                                                 recursion_depth);
+
+    } else {
+        vec3 zero_vector(0,0,0);
+        color = background_shader->Shade_Surface(ray, 
+                                                 zero_vector, 
+                                                 ht.object -> Normal(ray.endpoint + ray.direction, ht.part), 
+                                                 recursion_depth);
+    
+    }
+
     return color;
 }
 
