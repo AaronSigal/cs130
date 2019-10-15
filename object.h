@@ -17,6 +17,8 @@ class Object;
 
 struct Hit
 {
+    Hit() {}
+    Hit(const Object* obj, double d, int i) : object(obj), dist(d), part(i) {}
     const Object* object; // object that was intersected
     double dist; // distance along ray to intersection location
     int part; // which part was intersected (eg, for meshes)
