@@ -3,10 +3,11 @@
 #include "object.h"
 #include "light.h"
 #include "ray.h"
+#include "util.h" // For NO_INTERSECTION
 
 extern bool disable_hierarchy;
-const Object* empty_obj_ptr;
-const Hit NO_INTERSECTION(empty_obj_ptr, -1, -1);
+
+
 
 Render_World::Render_World()
     :background_shader(0),ambient_intensity(0),enable_shadows(true),
@@ -24,17 +25,25 @@ Render_World::~Render_World()
 // to ensure that hit.dist>=small_t.
 Hit Render_World::Closest_Intersection(const Ray& ray)
 {
+
+    std::cout << "Taking intersection\n"; // TODO: Remove debugging
+
     double min_t = std::numeric_limits<double>::max(); // Set min_t to the largest possible double value
 
 
-    Hit closest_hit;
+    Hit closest_hit = NO_INTERSECTION; // Default to no intersection. If any other hit is found, it is reported instead of this one.
 
     for (auto& obj : objects) { // For each object in the world
 
         for (int i = 0; i < obj->number_parts; i++) { // For each part on a given object
+
+            std::cout << "Checking collision...\n";
+
             Hit collision = obj -> Intersection(ray, i); // Get a hit
         
             if (collision.dist < min_t && collision.dist > small_t) { // Checks if the hit is closer than the previous-closest hit. Ignores if the hit is itself
+                
+                std::cout << "Setting min_t to " << collision.dist << "...\n";
                 min_t = collision.dist;
                 closest_hit = collision;
 
@@ -78,14 +87,17 @@ void Render_World::Render()
 // or the background color if there is no object intersection
 vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 {
+
+    std::cout << "Casting ray\n"; // TODO: Remove debugging
+
     vec3 color;
 
     Hit ht = Closest_Intersection(ray);
     
-    TODO; // Confirm that this is the correct way to check
-    if (ht.dist < std::numeric_limits<double>::max() ) { // Checks if there was a valid intersection.
+    //TODO; // Confirm that this is the correct way to check
+    if (ht.dist != -1) { // Checks if there was a valid intersection.
         
-        TODO; // Get the color from the material shader of the intersected object
+        //TODO; // Get the color from the material shader of the intersected object
         color = ht.object -> material_shader -> Shade_Surface(ray, 
                                                                  ray.endpoint + ray.direction,
                                                                  ht.object -> Normal(ray.endpoint + ray.direction, ht.part), 
