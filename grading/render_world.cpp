@@ -25,23 +25,37 @@ Render_World::~Render_World()
 // to ensure that hit.dist>=small_t.
 Hit Render_World::Closest_Intersection(const Ray& ray)
 {
-    double min_t = std::numeric_limits<double>::max(); // Set min_t to the largest possible double value
 
+    //std::cout << "Taking intersection\n"; // TODO: Remove debugging
+
+    double min_t = std::numeric_limits<double>::max(); // Set min_t to the largest possible double value
 
     Hit closest_hit = NO_INTERSECTION; // Default to no intersection. If any other hit is found, it is reported instead of this one.
 
     for (auto& obj : objects) { // For each object in the world
 
         for (int i = 0; i < obj->number_parts; i++) { // For each part on a given object
+
+            //std::cout << "Checking collision...\n";
+
             Hit collision = obj -> Intersection(ray, i); // Get a hit
-        
+
+            //std::cout << "Done calculating collision\n";
+
             if (collision.dist < min_t && collision.dist > small_t) { // Checks if the hit is closer than the previous-closest hit. Ignores if the hit is itself
+                
+                std::cout << "Found new hit!\n";
                 min_t = collision.dist;
                 closest_hit = collision;
 
             }
+
+            //std::cout << "Done assigning new hit...\n";
+
         }
     }
+
+    //std::cout << "Returning closest_hit...\n";
 
     return closest_hit;
 }
@@ -79,13 +93,19 @@ void Render_World::Render()
 // or the background color if there is no object intersection
 vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 {
+
+    //std::cout << "Casting ray\n"; // TODO: Remove debugging
+
     vec3 color;
 
     Hit ht = Closest_Intersection(ray);
-    
+
+    //std::cout << "Closest hit found...\n";
+
     //TODO; // Confirm that this is the correct way to check
-    if (ht.dist != -1) { // Checks if there was a valid intersection.
-        
+    if (ht.object != nullptr) { // Checks if there was a valid intersection.
+
+        //std::cout << "Shading by material...\n";
         //TODO; // Get the color from the material shader of the intersected object
         color = ht.object -> material_shader -> Shade_Surface(ray, 
                                                                  ray.endpoint + ray.direction,
@@ -93,14 +113,17 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
                                                                  recursion_depth);
 
     } else {
+
+        //std::cout << "Shading by background...\n";
         vec3 zero_vector(0,0,0);
         color = background_shader->Shade_Surface(ray, 
                                                  zero_vector, 
-                                                 ht.object -> Normal(ray.endpoint + ray.direction, ht.part), 
+                                                 zero_vector,
                                                  recursion_depth);
     
     }
 
+    //std::cout << "Returning color...\n";
     return color;
 }
 

@@ -1,7 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-static const Object* empty_obj_ptr;
-static const Hit NO_INTERSECTION(empty_obj_ptr, -1, -1);
+#include <iostream>
+
+static const Hit NO_INTERSECTION(nullptr, std::numeric_limits<double>::infinity(), -1);
 
 #endif
