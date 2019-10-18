@@ -18,9 +18,18 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
 
 double Phong_Shader::specular(const Ray& ray,const vec3& intersection_point,
                               const vec3& normal) const {
-    double intensity = 1;
+    double intensity = 0;
 
     vec3 view_direction = (world.camera.film_position - intersection_point).normalized();
+
+    for (const auto& light : world.lights) {
+      vec3 light_direction = (light->position - intersection_point).normalized();
+
+      vec3 reflected_direction = 2 * (dot(normal.normalized(), light_direction)) * (normal - light_direction);
+
+      intensity += dot(view_direction, reflected_direction);
+
+    }
 
     return intensity;
 }
