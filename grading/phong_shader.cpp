@@ -12,7 +12,8 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
 {
     vec3 color = color_ambient;
 
-    color += (color_diffuse * diffuse(ray, intersection_point, normal)) + (color_specular * pow(specular(ray, intersection_point, normal), specular_power));
+    color += color_diffuse * diffuse(ray, intersection_point, normal) + color_specular * std::pow(specular(ray, intersection_point, normal), specular_power);
+
     return color;
 }
 
@@ -25,7 +26,7 @@ double Phong_Shader::specular(const Ray& ray,const vec3& intersection_point,
     for (const auto& light : world.lights) {
       vec3 light_direction = (light->position - intersection_point).normalized();
 
-      vec3 reflected_direction = 2 * (dot(normal.normalized(), light_direction)) * (normal - light_direction);
+      vec3 reflected_direction = 2 * (dot(normal.normalized(), light_direction)) * (normal.normalized() - light_direction);
 
       intensity += dot(view_direction, reflected_direction);
 
@@ -37,7 +38,12 @@ double Phong_Shader::specular(const Ray& ray,const vec3& intersection_point,
 double Phong_Shader::diffuse(const Ray& ray,
                              const vec3& intersection_point,
                              const vec3& normal) const {
-    double intensity = dot (ray.direction.normalized(), normal.normalized());
+    double intensity = 0;
+
+    for (const auto &light : world.lights) {
+        vec3 light_direction = light->position - intersection_point;
+        intensity += dot(normal, light_direction.normalized());
+    }
 
     return intensity;
 }

@@ -12,7 +12,9 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
 {
     vec3 color = color_ambient;
 
-    color += (color_diffuse * diffuse(ray, intersection_point, normal)) + (color_specular * pow(specular(ray, intersection_point, normal), specular_power));
+    // Sum the colors and intensities
+    color += color_diffuse * diffuse(ray, intersection_point, normal) + color_specular * std::pow(specular(ray, intersection_point, normal), specular_power);
+
     return color;
 }
 
@@ -20,14 +22,16 @@ double Phong_Shader::specular(const Ray& ray,const vec3& intersection_point,
                               const vec3& normal) const {
     double intensity = 0;
 
+    // Calculate the view direction
     vec3 view_direction = (world.camera.film_position - intersection_point).normalized();
 
+    // For each light
     for (const auto& light : world.lights) {
-      vec3 light_direction = (light->position - intersection_point).normalized();
+      vec3 light_direction = (light->position - intersection_point).normalized(); // Get its direction
 
-      vec3 reflected_direction = 2 * (dot(normal.normalized(), light_direction)) * (normal - light_direction);
+      vec3 reflected_direction = 2 * (dot(normal.normalized(), light_direction)) * (normal.normalized() - light_direction); // Reflect the direction over the normal
 
-      intensity += dot(view_direction, reflected_direction);
+      intensity += dot(view_direction, reflected_direction); // Add the contribution of this light to the overall intensity
 
     }
 
@@ -37,7 +41,12 @@ double Phong_Shader::specular(const Ray& ray,const vec3& intersection_point,
 double Phong_Shader::diffuse(const Ray& ray,
                              const vec3& intersection_point,
                              const vec3& normal) const {
-    double intensity = dot (ray.direction.normalized(), normal.normalized());
+    double intensity = 0;
+
+    for (const auto &light : world.lights) { // For each light
+        vec3 light_direction = light->position - intersection_point; // Calculate the direction
+        intensity += dot(normal, light_direction.normalized());      // Add the intensity of the diffuse effect to the total
+    }
 
     return intensity;
 }
