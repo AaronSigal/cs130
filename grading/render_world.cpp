@@ -44,7 +44,7 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
 
             if (collision.dist < min_t && collision.dist > small_t) { // Checks if the hit is closer than the previous-closest hit. Ignores if the hit is itself
                 
-                std::cout << "Found new hit!\n";
+                //std::cout << "Found new hit!\n";
                 min_t = collision.dist;
                 closest_hit = collision;
 

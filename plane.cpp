@@ -1,15 +1,31 @@
+#include "util.h"
+
 #include "plane.h"
 #include "ray.h"
 #include <cfloat>
 #include <limits>
+#include <math.h>
+
 
 // Intersect with the half space defined by the plane.  The plane's normal
 // points outside.  If the ray starts on the "inside" side of the plane, be sure
 // to record a hit with t=0 as the first entry in hits.
 Hit Plane::Intersection(const Ray& ray, int part) const
 {
-    TODO;
-    return {0,0,0};
+	const double DOT_PROD_MIN = 0.0001;
+    
+	double d = dot(normal, ray.direction);
+
+	if (std::abs(d) > DOT_PROD_MIN) {
+		double t = dot(x1 - ray.endpoint, normal) / d;
+
+		if (t >= 0) {
+			return Hit(this, t, part);
+		}
+	}
+
+
+    return NO_INTERSECTION;
 }
 
 vec3 Plane::Normal(const vec3& point, int part) const
