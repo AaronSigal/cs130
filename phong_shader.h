@@ -5,6 +5,12 @@
 
 class Phong_Shader : public Shader
 {
+private:
+    double specular(const Ray& ray,const vec3& intersection_point,
+                    const vec3& normal) const;
+    double diffuse(const Ray& ray,const vec3& intersection_point,
+                   const vec3& normal) const;
+
 public:
     vec3 color_ambient,color_diffuse,color_specular;
     double specular_power;
