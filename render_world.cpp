@@ -116,7 +116,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
         //std::cout << "Shading by material...\n";
         //TODO; // Get the color from the material shader of the intersected object
         color = ht.object -> material_shader -> Shade_Surface(ray, 
-                                                                 ray.endpoint + ray.direction,
+                                                                 ray.endpoint + (ray.direction) * ht.dist,
                                                                  ht.object -> Normal(ray.endpoint + ray.direction, ht.part), 
                                                                  recursion_depth);
 

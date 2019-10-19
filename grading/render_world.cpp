@@ -25,7 +25,8 @@ Render_World::~Render_World()
 // to ensure that hit.dist>=small_t.
 Hit Render_World::Closest_Intersection(const Ray& ray)
 {
-
+    int obj_index = -1;
+    int index = -1;
     //std::cout << "Taking intersection\n"; // TODO: Remove debugging
 
     double min_t = std::numeric_limits<double>::max(); // Set min_t to the largest possible double value
@@ -33,7 +34,7 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
     Hit closest_hit = NO_INTERSECTION; // Default to no intersection. If any other hit is found, it is reported instead of this one.
 
     for (auto& obj : objects) { // For each object in the world
-
+        index++;
         for (int i = 0; i < obj->number_parts; i++) { // For each part on a given object
 
             //std::cout << "Checking collision...\n";
@@ -48,6 +49,10 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
                 min_t = collision.dist;
                 closest_hit = collision;
 
+                if (debug_pixel) {
+                    obj_index = index;
+                }
+
             }
 
             //std::cout << "Done assigning new hit...\n";
@@ -55,7 +60,11 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
         }
     }
 
-    //std::cout << "Returning closest_hit...\n";
+    if (debug_pixel) {
+        std::cout << "Hit distance: " << closest_hit.dist << "\n";
+        std::cout << "Obj[" << obj_index << "]\n";
+    }
+
     return closest_hit;
 }
 
@@ -107,7 +116,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
         //std::cout << "Shading by material...\n";
         //TODO; // Get the color from the material shader of the intersected object
         color = ht.object -> material_shader -> Shade_Surface(ray, 
-                                                                 ray.endpoint + ray.direction,
+                                                                 ray.endpoint + (ray.direction) * ht.dist,
                                                                  ht.object -> Normal(ray.endpoint + ray.direction, ht.part), 
                                                                  recursion_depth);
 
@@ -123,6 +132,11 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
     }
 
     //std::cout << "Returning color...\n";
+
+    if (debug_pixel) {
+        std::cout << "Direction:\t" << ray.direction << "\n";
+        std::cout << "Endpoint:\t" << ray.endpoint << "\n";
+    }
     return color;
 }
 
