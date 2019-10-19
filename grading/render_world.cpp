@@ -56,7 +56,6 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
     }
 
     //std::cout << "Returning closest_hit...\n";
-
     return closest_hit;
 }
 
