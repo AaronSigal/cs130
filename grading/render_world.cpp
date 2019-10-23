@@ -117,7 +117,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
         //TODO; // Get the color from the material shader of the intersected object
         color = ht.object -> material_shader -> Shade_Surface(ray, 
                                                                  ray.endpoint + (ray.direction) * ht.dist,
-                                                                 ht.object -> Normal(ray.endpoint + ray.direction, ht.part), 
+                                                                 ht.object -> Normal( ray.endpoint + (ray.direction) * ht.dist, ht.part),
                                                                  recursion_depth);
 
     } else {
@@ -134,8 +134,8 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
     //std::cout << "Returning color...\n";
 
     if (debug_pixel) {
-        std::cout << "Direction:\t" << ray.direction << "\n";
-        std::cout << "Endpoint:\t" << ray.endpoint << "\n";
+        std::cout << " Cast Ray: Endpoint: " << ray.endpoint << "Direction: " << ray.direction << " ";
+        std::cout << "\n";
     }
     return color;
 }

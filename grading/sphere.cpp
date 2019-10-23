@@ -6,58 +6,57 @@
 // Determine if the ray intersects with the sphere
 Hit Sphere::Intersection(const Ray& ray, int part) const
 {
-	//Hit hit;
+    //Hit hit;
 
-	vec3 v = ray.endpoint - center;
+    vec3 v = ray.endpoint - center;
 
-	double a, b, c, d; // a, b, and c are the members of the quadratic equation. d is the result for the part within the sqrt
+    double a, b, c, d; // a, b, and c are the members of the quadratic equation. d is the result for the part within the sqrt
 
-	 a = dot(ray.direction, ray.direction); // Direction^2
-	 b = dot (v, ray.direction) * 2;
-	 c = dot (v, v) - std::pow(radius, 2);
-	 d = std::pow(b, 2) - (4 * a * c); // as per notes on sphere intersection
+    a = dot(ray.direction, ray.direction); // Direction^2
+    b = dot (v, ray.direction) * 2;
+    c = dot (v, v) - std::pow(radius, 2);
+    d = std::pow(b, 2) - (4 * a * c); // as per notes on sphere intersection
 
-	 //std::cout << "Checking d...\n";
-	 if (d < 0) { // If the intersection was behind the camera (not relevent)
+    //std::cout << "Checking d...\n";
+    if (d < 0) { // If the intersection was behind the camera (not relevent)
 
-	 	//std::cout << "Returning no intersection!\n";
-	 	return Hit(nullptr, std::numeric_limits<double>::infinity(), -1); // Report that there was no valid intersection
+        //std::cout << "Returning no intersection!\n";
+        return Hit(nullptr, std::numeric_limits<double>::infinity(), -1); // Report that there was no valid intersection
 
-	 } else { 									 // If the intersection is in front of the camera
-	 	
-	 	//std::cout << "checking case 1...\n";
+    } else { 									 // If the intersection is in front of the camera
 
-	 	float precursor = -b - std::pow(d, 0.5); // Checking the -b - 2a scenario in the quadratic equation
+        //std::cout << "checking case 1...\n";
 
-
-
-		if (precursor > 0) {
-			
-			//std::cout << "Returning in case1!\n";
-			return Hit(this, precursor / (2.0* a), part); // Return the top of the quadratic equation divided by 2a (which is the bottom)
-		}
-
-		//std::cout << "Checking case 2...\n";
-
-		precursor = -b + std::pow(d, 0.5); 		 // Checking the -b + 2a scenario
+        float precursor = -b - std::pow(d, 0.5); // Checking the -b - 2a scenario in the quadratic equation
 
 
-		if (precursor > 0) {
 
-			return Hit(this, precursor / (2.0* a), part);
+        if (precursor > 0) {
 
-		} else {
-			
-			return NO_INTERSECTION;
+            //std::cout << "Returning in case1!\n";
+            return Hit(this, precursor / (2.0* a), part); // Return the top of the quadratic equation divided by 2a (which is the bottom)
+        }
 
-		}
-	}
+        //std::cout << "Checking case 2...\n";
+
+        precursor = -b + std::pow(d, 0.5); 		 // Checking the -b + 2a scenario
+
+
+        if (precursor > 0) {
+
+            return Hit(this, precursor / (2.0* a), part);
+
+        } else {
+
+            return NO_INTERSECTION;
+
+        }
+    }
 }
 
 vec3 Sphere::Normal(const vec3& point, int part) const
 {
     vec3 normal = (point - center).normalized();
-    //TODO; // compute the normal direction
     return normal;
 }
 
