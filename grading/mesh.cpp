@@ -51,6 +51,8 @@ vec3 Mesh::Normal(const vec3& point, int part) const
 {
     assert(part>=0);
     TODO;
+    vec3 normal = cross(vertices[triangles[part][0]], vertices[triangles[part][1]]);
+
     return vec3();
 }
 
@@ -77,6 +79,10 @@ bool Mesh::Intersect_Triangle(const Ray& ray, int tri, double& dist) const
 Box Mesh::Bounding_Box(int part) const
 {
     Box b;
-    TODO;
+    b.Make_Empty();
+
+    for (int i = 0; i < 3; i++)
+        b.Include_Point(vertices[triangles[part][i]]);
+    
     return b;
 }

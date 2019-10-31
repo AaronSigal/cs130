@@ -1,5 +1,6 @@
 #include <limits>
 #include "box.h"
+#include "util.h"
 
 // Return whether the ray intersects this box.
 bool Box::Intersection(const Ray& ray) const
