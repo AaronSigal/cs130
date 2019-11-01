@@ -50,10 +50,10 @@ Hit Mesh::Intersection(const Ray& ray, int part) const
 vec3 Mesh::Normal(const vec3& point, int part) const
 {
     assert(part>=0);
-    TODO;
+    //TODO;
     vec3 normal = cross(vertices[triangles[part][0]], vertices[triangles[part][1]]);
-
-    return vec3();
+    //vec3 normal;
+    return normal;
 }
 
 // This is a helper routine whose purpose is to simplify the implementation
@@ -70,7 +70,14 @@ vec3 Mesh::Normal(const vec3& point, int part) const
 // two triangles.
 bool Mesh::Intersect_Triangle(const Ray& ray, int tri, double& dist) const
 {
-    TODO;
+
+    assert(tri>=0);
+
+    //double n_dot_ray_direction = dot(Normal(tri), ray.direction);
+
+    //if (abs(n_dot_ray_direction) < small_t)
+    //    return false; // Check for the ray being parallel and return false if it is
+    
     return false;
 }
 
