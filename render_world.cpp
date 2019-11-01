@@ -104,7 +104,12 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 
     //std::cout << "Casting ray\n"; // TODO: Remove debugging
 
-    vec3 color;
+    vec3 color(0,0,0);
+
+    if (recursion_depth > recursion_depth_limit) {
+        std::cout << "Exceeded depth limit\n";
+        return color;
+    }
 
     Hit ht = Closest_Intersection(ray);
 
@@ -112,6 +117,8 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 
     //TODO; // Confirm that this is the correct way to check
     if (ht.object != nullptr) { // Checks if there was a valid intersection.
+
+        //std::cout << "Within depth limit\n";
 
         //std::cout << "Shading by material...\n";
         //TODO; // Get the color from the material shader of the intersected object
@@ -122,7 +129,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 
     } else {
 
-        //std::cout << "Shading by background...\n";
+        std::cout << "Shading by background...\n";
         vec3 zero_vector(0,0,0);
         color = background_shader->Shade_Surface(ray, 
                                                  zero_vector, 

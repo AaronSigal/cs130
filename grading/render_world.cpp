@@ -104,7 +104,10 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 
     //std::cout << "Casting ray\n"; // TODO: Remove debugging
 
-    vec3 color;
+    vec3 color(0,0,0);
+
+    if (recursion_depth > recursion_depth_limit)
+        return color;
 
     Hit ht = Closest_Intersection(ray);
 
