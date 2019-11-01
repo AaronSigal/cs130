@@ -61,8 +61,9 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
     }
 
     if (debug_pixel) {
-        std::cout << "Hit distance: " << closest_hit.dist << "\n";
-        std::cout << "Obj[" << obj_index << "]\n";
+        std::cout << "Intersection with obj[" << obj_index << "]; ";
+        std::cout << " dist = " << closest_hit.dist << "\n";
+        
     }
 
     return closest_hit;
@@ -107,7 +108,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
     vec3 color(0,0,0);
 
     if (recursion_depth > recursion_depth_limit) {
-        std::cout << "Exceeded depth limit\n";
+        //std::cout << "Exceeded depth limit\n";
         return color;
     }
 
@@ -129,7 +130,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 
     } else {
 
-        std::cout << "Shading by background...\n";
+        //std::cout << "Shading by background...\n";
         vec3 zero_vector(0,0,0);
         color = background_shader->Shade_Surface(ray, 
                                                  zero_vector, 
@@ -141,7 +142,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
     //std::cout << "Returning color...\n";
 
     if (debug_pixel) {
-        std::cout << " Cast Ray: Endpoint: " << ray.endpoint << "Direction: " << ray.direction << " ";
+        std::cout << " cast ray: end = " << ray.endpoint << "; dir: " << ray.direction << " ";
         std::cout << "\n";
     }
     return color;
