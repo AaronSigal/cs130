@@ -113,8 +113,6 @@ bool Mesh::Intersect_Triangle(const Ray& ray, int tri, double& dist) const
 
     double inv_denom = 1 / denom; // Divides are bad, but this one is cool.
 
-    /
-
     // Find the Baryocentric weights for the three points
     double v1v0_weight = dot(
                    cross(ray.direction, v1v0), 
