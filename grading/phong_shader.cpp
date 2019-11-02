@@ -63,8 +63,8 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
 
         if (debug_pixel) { // Debug statement
             std::cout << "Shading for light " << i << ": "
-            << "diffuse: "   << df
-            << " specular: " << color_specular * sp
+            << "diffuse = "   << df
+            << " specular = " << color_specular * sp
             << "\n";
         }
       } 
@@ -76,11 +76,11 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
     color += diffuse_ + specular_;
 
     if (debug_pixel) {
-        std::cout << "Calling Shade_Surface with: ";
-        std::cout << "Location: " << intersection_point;
-        std::cout << " normal: " << normal << "\n";
-        std::cout << "Ambient: " << color_ambient << "\n";
-        std::cout << "Final color:\t" << color << "\n";
+        std::cout << "call Shade_Surface with: location = ";
+        std::cout << intersection_point;
+        std::cout << "; normal = " << normal << "\n";
+        std::cout << "Ambient = " << color_ambient << "\n";
+        std::cout << "Final color = " << color << "\n";
     }
 
     return color;
