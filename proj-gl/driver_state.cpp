@@ -18,7 +18,7 @@ void initialize_render(driver_state& state, int width, int height)
 {
     state.image_width=width;
     state.image_height=height;
-    state.image_color=0;
+    state.image_color = new pixel[width * height]; // We have (width * height) number of pixels, and as such, need to store that many pieces of color information
     state.image_depth=0;
     std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
 }
