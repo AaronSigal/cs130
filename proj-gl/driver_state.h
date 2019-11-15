@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+extern bool DEBUG;
+
 struct driver_state
 {
     // Custom data that is stored per vertex, such as positions or colors.

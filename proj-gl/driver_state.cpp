@@ -100,34 +100,34 @@ void render(driver_state& state, render_type type) {
         if (type == render_type::triangle) {
 
             data_geometry dg[3]; // Create an array of size 3
-            data_vertex dv;
+            data_vertex dv;      // Used to vertex shade the above data_geometry
             const data_geometry * dg_ptr[3] = {&dg[0], &dg[1], &dg[2]};
 
             for (int i = 0; i < state.num_vertices * state.floats_per_vertex; i += 3 * state.floats_per_vertex) { // Tracks the starting point of each group of three. So i = the position of the first float in every group of three vertices.
                 
                 for (int j = 0; j < 3; j++) {
-                    dg[j].data = state.vertex_data + i + j * state.floats_per_vertex;
-                    dv.data = dg[j].data;
-                    state.vertex_shader(dv, dg[j], state.uniform_data);
+                    dg[j].data = state.vertex_data + i + j * state.floats_per_vertex; // Set the contents of the data of the data_geometry currently being iterated over
+                    dv.data = dg[j].data;                                             // Extract the data into a data_vertex object
+                    state.vertex_shader(dv, dg[j], state.uniform_data);               // Shade the data_geometry using the data_vertex
                 }
 
                 clip_triangle(state, dg_ptr, 6); // TODO: Update when clipping is ready
 
-               // Debugging outputs
-                std::cout << "vertex_data:\n ";
-                for (int j = 0; j < state.floats_per_vertex * state.num_vertices; j++)
-                    std::cout << state.vertex_data[j] << " ";
-                std::cout << "\n";
+               if (DEBUG) {
+                   std::cout << "vertex_data:\n ";
+                   for (int j = 0; j < state.floats_per_vertex * state.num_vertices; j++)
+                       std::cout << state.vertex_data[j] << " ";
+                   std::cout << "\n";
 
-                std::cout << "data_geometry data:\n";
-                for(int j = 0; j < 3; j++) {
-                    for (int k = 0; k < state.floats_per_vertex; k++) {
-                        std::cout << dg[j].data[k] << " ";
-                    }
-                    std::cout << "\n";
-                }
+                   std::cout << "data_geometry data:\n";
+                   for (int j = 0; j < 3; j++) {
+                       for (int k = 0; k < state.floats_per_vertex; k++) {
+                           std::cout << dg[j].data[k] << " ";
+                       }
+                       std::cout << "\n";
+                   }
+               }
             }
-            
         return;
     }
 

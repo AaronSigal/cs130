@@ -37,6 +37,8 @@
 #include "driver_state.h"
 #include <unistd.h>
 
+bool DEBUG = false;
+
 void parse(const char* test_file, driver_state& state);
 void dump_png(pixel* data,int width,int height,const char* filename);
 void read_png(pixel*& data,int& width,int& height,const char* filename);
@@ -117,13 +119,14 @@ int main(int argc, char** argv)
     // Parse commandline options
     while(1)
     {
-        int opt = getopt(argc, argv, "s:i:o:");
+        int opt = getopt(argc, argv, "s:i:o:d");
         if(opt==-1) break;
         switch(opt)
         {
             case 's': solution_file = optarg; break;
             case 'i': input_file = optarg; break;
             case 'o': statistics_file = optarg; break;
+            case 'd' : DEBUG = true;
         }
     }
 
