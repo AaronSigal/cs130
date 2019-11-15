@@ -1,5 +1,11 @@
 #include "driver_state.h"
 #include <cstring>
+#include <vector>
+
+bool intersect_triangle(data_geometry a, data_geometry b, data_geometry c, vec2 point) {
+
+
+}
 
 driver_state::driver_state()
 {
@@ -20,6 +26,12 @@ void initialize_render(driver_state& state, int width, int height)
     state.image_height=height;
     state.image_color = new pixel[width * height]; // We have (width * height) number of pixels, and as such, need to store that many pieces of color information
     state.image_depth=0;
+
+    for (int i = 0; i < width * height; i++) {
+        //delete state.image_color[i];
+        state.image_color[i] = pixel(make_pixel(0,0,0));
+    }
+
     std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
 }
 
@@ -60,14 +72,38 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     const data_vertex dv_1{in[1]->data};
     const data_vertex dv_2{in[2]->data};
 
+    std::vector<data_geometry> dg_outs;
+
     for (int i = 0; i < 3; i++) {
         data_geometry dg_out;
+
         (*state.vertex_shader)(dv_0, dg_out, state.uniform_data);
+
+        dg_outs.push_back(dg_out);
+
     }
 
-    
+    int lower_x_bound, upper_x_bound, lower_y_bound, upper_y_bound; // Bounds for iterating over the image.
+
+    // The bounds are going to be naievely set for now. They will be optimized by a function that will be written later.
+    lower_x_bound = lower_y_bound = 0;
+    upper_x_bound = state.image_width;
+    upper_y_bound = state.image_height;
+
+    for (int i = lower_x_bound; i < upper_x_bound; i++) {
+        for (int j = lower_y_bound; j < upper_y_bound; j++) {
+
+            if (intersect_triangle(dg_outs[0], dg_outs[1], dg_outs[2], vec2(i,j))) {
+                state.image_color[((j) * state.image_height) + i] = make_pixel(255,0,0);
+            }
+        }
+    }
+
+
 
 
     std::cout<<"TODO: implement rasterization"<<std::endl;
 }
+
+
 
