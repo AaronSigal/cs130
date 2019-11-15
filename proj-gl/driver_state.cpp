@@ -56,6 +56,18 @@ void clip_triangle(driver_state& state, const data_geometry* in[3],int face)
 // fragments, calling the fragment shader, and z-buffering.
 void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 {
+    const data_vertex dv_0{in[0]->data};
+    const data_vertex dv_1{in[1]->data};
+    const data_vertex dv_2{in[2]->data};
+
+    for (int i = 0; i < 3; i++) {
+        data_geometry dg_out;
+        (*state.vertex_shader)(dv_0, dg_out, state.uniform_data);
+    }
+
+    
+
+
     std::cout<<"TODO: implement rasterization"<<std::endl;
 }
 
