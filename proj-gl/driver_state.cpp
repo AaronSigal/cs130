@@ -45,6 +45,63 @@ void initialize_render(driver_state& state, int width, int height)
 void render(driver_state& state, render_type type)
 {
     std::cout<<"TODO: implement rendering."<<std::endl;
+
+        if (type == render_type::triangle) {
+
+            for (int i = 0; i < (state.num_vertices * state.floats_per_vertex); i = i + (3 * state.floats_per_vertex)) { // Tracks the starting point of eachgroup of three. So i = the position of the first float in every group of three vertices. 
+
+                data_geometry dg[3]; // Create an array of size 3
+                const data_geometry * dg_ptr[3] = {&dg[0], &dg[1], &dg[2]};
+                
+                for (int j = 0; j < 3; j++)
+                    dg[j].data = new float[MAX_FLOATS_PER_VERTEX]; // Initialize the data array of each data_geometry to the limit
+
+
+                for (int j = 0; j < 3; j++) {
+
+                    // Inserts a single vertex into dg[j]'s data. It uses j to track which one of the three vertices it is currently working on.
+                    read_data(state.vertex_data, state.floats_per_vertex, i + j * state.floats_per_vertex, dg[j].data);
+
+                    rasterize_triangle(state, dg_ptr);
+                }
+
+                /* // Debugging outputs
+                std::cout << "vertex_data:\n ";
+                for (int j = 0; j < state.floats_per_vertex * state.num_vertices; j++)
+                    std::cout << state.vertex_data[j] << " ";
+                std::cout << "\n";
+
+                std::cout << "data_geometry data:\n";
+                for(int j = 0; j < 3; j++) {
+                    for (int k = 0; k < state.floats_per_vertex; k++) {
+                        std::cout << dg[j].data[k] << " ";
+                    }
+                    std::cout << "\n";
+                }
+                */
+
+                for (int j = 0; j < 3; j++)
+                    delete dg[j].data; // Free the memeory we allocated earlier
+
+                }
+            return;
+
+        }
+
+    if (type == render_type::indexed) {
+    
+        return;
+    }
+
+    if (type == render_type::fan) {
+    
+        return;
+    }
+
+    if (type == render_type::strip) {
+    
+        return;
+    }
 }
 
 
