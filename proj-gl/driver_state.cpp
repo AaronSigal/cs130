@@ -94,8 +94,7 @@ void initialize_render(driver_state& state, int width, int height)
 //                           to a triangle.  These numbers are indices into vertex_data.
 //   render_type::fan -      The vertices are to be interpreted as a triangle fan.
 //   render_type::strip -    The vertices are to be interpreted as a triangle strip.
-void render(driver_state& state, render_type type)
-{
+void render(driver_state& state, render_type type) {
     std::cout<<"TODO: implement rendering."<<std::endl;
 
         if (type == render_type::triangle) {
@@ -104,7 +103,7 @@ void render(driver_state& state, render_type type)
             data_vertex dv;
             const data_geometry * dg_ptr[3] = {&dg[0], &dg[1], &dg[2]};
 
-            for (int i = 0; i < (state.num_vertices * state.floats_per_vertex); i = i + (3 * state.floats_per_vertex)) { // Tracks the starting point of eachgroup of three. So i = the position of the first float in every group of three vertices. 
+            for (int i = 0; i < state.num_vertices * state.floats_per_vertex; i += 3 * state.floats_per_vertex) { // Tracks the starting point of each group of three. So i = the position of the first float in every group of three vertices.
                 
                 for (int j = 0; j < 3; j++) {
                     dg[j].data = state.vertex_data + i + j * state.floats_per_vertex;
@@ -113,9 +112,8 @@ void render(driver_state& state, render_type type)
                 }
 
                 clip_triangle(state, dg_ptr, 6); // TODO: Update when clipping is ready
-                
 
-                // Debugging outputs
+               // Debugging outputs
                 std::cout << "vertex_data:\n ";
                 for (int j = 0; j < state.floats_per_vertex * state.num_vertices; j++)
                     std::cout << state.vertex_data[j] << " ";
@@ -128,9 +126,9 @@ void render(driver_state& state, render_type type)
                     }
                     std::cout << "\n";
                 }
-
-            return;
-        }
+            }
+            
+        return;
     }
 
     if (type == render_type::indexed) {
