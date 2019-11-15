@@ -39,9 +39,11 @@ bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, da
     //std::cout << area(C, B, point);
 
     // AREA(CBP) / AREA(ABC)
-    alpha = area(C, B, point) / area(A, B, C);
-    beta  = area(A, C, point) / area(A, B, C);
-    gamma = area(A, B, point) / area(A, B, C);
+    float inverse_area = 1.0 / area(A, B, C);
+
+    alpha = area(point,B, C) * inverse_area;
+    beta  = area(A, point, C) * inverse_area;
+    gamma = area(A, B, point) * inverse_area;
 
 
 
@@ -50,7 +52,7 @@ bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, da
               << "gamea: " << gamma << "\n"; */
 
     if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-        std::cout << "Point passed!" << std::endl;
+        //std::cout << "Point passed!" << std::endl;
         return true;
     }
 
@@ -99,20 +101,19 @@ void render(driver_state& state, render_type type)
         if (type == render_type::triangle) {
 
             data_geometry dg[3]; // Create an array of size 3
+            data_vertex dv;
             const data_geometry * dg_ptr[3] = {&dg[0], &dg[1], &dg[2]};
 
             for (int i = 0; i < (state.num_vertices * state.floats_per_vertex); i = i + (3 * state.floats_per_vertex)) { // Tracks the starting point of eachgroup of three. So i = the position of the first float in every group of three vertices. 
                 
-                for (int j = 0; j < 3; j++)
-                    dg[j].data = new float[MAX_FLOATS_PER_VERTEX]; // Initialize the data array of each data_geometry to the limit
-
                 for (int j = 0; j < 3; j++) {
-
-                    // Inserts a single vertex into dg[j]'s data. It uses j to track which one of the three vertices it is currently working on.
-                    read_data(state.vertex_data, state.floats_per_vertex, i + j * state.floats_per_vertex, dg[j].data);
-
-                    rasterize_triangle(state, dg_ptr);
+                    dg[j].data = state.vertex_data + i + j * state.floats_per_vertex;
+                    dv.data = dg[j].data;
+                    state.vertex_shader(dv, dg[j], state.uniform_data);
                 }
+
+                clip_triangle(state, dg_ptr, 6); // TODO: Update when clipping is ready
+                
 
                 // Debugging outputs
                 std::cout << "vertex_data:\n ";
@@ -127,17 +128,10 @@ void render(driver_state& state, render_type type)
                     }
                     std::cout << "\n";
                 }
-                
-
-                for (int j = 0; j < 3; j++)
-                    delete dg[j].data; // Free the memeory we allocated earlier
-
-                }
-
 
             return;
-
         }
+    }
 
     if (type == render_type::indexed) {
     
@@ -162,6 +156,8 @@ void render(driver_state& state, render_type type)
 // simply pass the call on to rasterize_triangle.
 void clip_triangle(driver_state& state, const data_geometry* in[3],int face)
 {
+
+
     if(face==6)
     {
         rasterize_triangle(state, in);
@@ -176,20 +172,6 @@ void clip_triangle(driver_state& state, const data_geometry* in[3],int face)
 // fragments, calling the fragment shader, and z-buffering.
 void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 {
-    const data_vertex dv_0{in[0]->data};
-    const data_vertex dv_1{in[1]->data};
-    const data_vertex dv_2{in[2]->data};
-
-    std::vector<data_geometry> dg_outs;
-
-    for (int i = 0; i < 3; i++) {
-        data_geometry dg_out;
-
-        (*state.vertex_shader)(dv_0, dg_out, state.uniform_data); // Hit up the vertex shader. This should give us a correct gl_Position to reference later on.
-
-        dg_outs.push_back(dg_out);                                // Add the new-found data_geometry to our vector
-
-    }
 
     int lower_x_bound, upper_x_bound, lower_y_bound, upper_y_bound; // Bounds for iterating over the image.
 
@@ -198,26 +180,20 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     upper_x_bound = state.image_width;
     upper_y_bound = state.image_height;
 
-    std::cout << "lx " << lower_x_bound << " ux " << upper_x_bound << " ly " << lower_y_bound << " uy " << upper_y_bound << std::endl;
-
+    //std::cout << "lx " << lower_x_bound << " ux " << upper_x_bound << " ly " << lower_y_bound << " uy " << upper_y_bound << std::endl;
     for (int i = lower_x_bound; i < upper_x_bound; i++) {
         for (int j = lower_y_bound; j < upper_y_bound; j++) {
-
+        
             //std::cout << "Checking " << i << ", " << j << std::endl;
             float triangle_area = -1;
 
-            if (intersect_triangle(state, dg_outs[0], dg_outs[1], dg_outs[2], vec2(i,j), triangle_area)) {
+            if (intersect_triangle(state, *in[0], *in[1], *in[2], vec2(float(i + 0.5) , float(j + 0.5) ), triangle_area)) {
 
                 //std::cout << "Coloring..." << std::endl;
-                state.image_color[((j) * state.image_height) + i] = make_pixel(255,255,255); // If the intersection routine comes back true, color the current pixel. //TODO: set color correctly
+                state.image_color[((j) * state.image_width) + i] = make_pixel(255,255,255); // If the intersection routine comes back true, color the current pixel. //TODO: set color correctly
             }
         }
     }
-
-
-
-
-    std::cout<<"TODO: implement rasterization"<<std::endl;
 }
 
 
