@@ -2,9 +2,59 @@
 #include <cstring>
 #include <vector>
 
-bool intersect_triangle(data_geometry a, data_geometry b, data_geometry c, vec2 point) {
+void read_data(float * vertex_data, int floats_per_vertex, int index, float* data_out) {
+    for (int i = index; i < index + floats_per_vertex; i++) {
+        data_out[i - index] = vertex_data[i];
+    }
+}
+
+// Area = 0.5*((bx*cy - cx*by) - (ax*cy - cx*ay) + (ax*by - bx*ay)) 
+float area(vec2 a, vec2 b, vec2 c) {
+    return 0.5 * ((b[0] * c[1] - c[0] * b[1]) - (a[0] * c[1] - c[0] * a[1]) + (a[0] * b[1] - b[0] * a[1]));
+}
 
 
+bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, data_geometry c, vec2 point, float triangle_area) {
+
+
+    // Barycentric weights
+    float alpha, beta, gamma;
+    vec2 A, B, C;
+
+    /*
+    A = vec2(a.gl_Position[0], a.gl_Position[1]) / a.gl_Position[3];
+    B = vec2(b.gl_Position[0], b.gl_Position[1]) / a.gl_Position[3];
+    C = vec2(c.gl_Position[0], c.gl_Position[1]) / a.gl_Position[3];
+    */
+
+    A = vec2(  ( a.gl_Position[0] / a.gl_Position[3] + 1)  * 0.5 * state.image_width,
+               ( a.gl_Position[1] / a.gl_Position[3] + 1) * 0.5 * state.image_height);
+
+    B = vec2(  ( b.gl_Position[0] / b.gl_Position[3] + 1)  * 0.5 * state.image_width,
+               ( b.gl_Position[1] / b.gl_Position[3] + 1) * 0.5 * state.image_height);
+
+    C = vec2(  ( c.gl_Position[0] / c.gl_Position[3] + 1)  * 0.5 * state.image_width,
+               ( c.gl_Position[1] / c.gl_Position[3] + 1) * 0.5 * state.image_height);
+
+    //std::cout << area(C, B, point);
+
+    // AREA(CBP) / AREA(ABC)
+    alpha = area(C, B, point) / area(A, B, C);
+    beta  = area(A, C, point) / area(A, B, C);
+    gamma = area(A, B, point) / area(A, B, C);
+
+
+
+    /* std::cout << "alpha: " << alpha << " "
+              << "beta:"   << beta  << " "
+              << "gamea: " << gamma << "\n"; */
+
+    if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+        std::cout << "Point passed!" << std::endl;
+        return true;
+    }
+
+    return false;
 }
 
 driver_state::driver_state()
@@ -48,14 +98,13 @@ void render(driver_state& state, render_type type)
 
         if (type == render_type::triangle) {
 
-            for (int i = 0; i < (state.num_vertices * state.floats_per_vertex); i = i + (3 * state.floats_per_vertex)) { // Tracks the starting point of eachgroup of three. So i = the position of the first float in every group of three vertices. 
+            data_geometry dg[3]; // Create an array of size 3
+            const data_geometry * dg_ptr[3] = {&dg[0], &dg[1], &dg[2]};
 
-                data_geometry dg[3]; // Create an array of size 3
-                const data_geometry * dg_ptr[3] = {&dg[0], &dg[1], &dg[2]};
+            for (int i = 0; i < (state.num_vertices * state.floats_per_vertex); i = i + (3 * state.floats_per_vertex)) { // Tracks the starting point of eachgroup of three. So i = the position of the first float in every group of three vertices. 
                 
                 for (int j = 0; j < 3; j++)
                     dg[j].data = new float[MAX_FLOATS_PER_VERTEX]; // Initialize the data array of each data_geometry to the limit
-
 
                 for (int j = 0; j < 3; j++) {
 
@@ -65,7 +114,7 @@ void render(driver_state& state, render_type type)
                     rasterize_triangle(state, dg_ptr);
                 }
 
-                /* // Debugging outputs
+                // Debugging outputs
                 std::cout << "vertex_data:\n ";
                 for (int j = 0; j < state.floats_per_vertex * state.num_vertices; j++)
                     std::cout << state.vertex_data[j] << " ";
@@ -78,12 +127,14 @@ void render(driver_state& state, render_type type)
                     }
                     std::cout << "\n";
                 }
-                */
+                
 
                 for (int j = 0; j < 3; j++)
                     delete dg[j].data; // Free the memeory we allocated earlier
 
                 }
+
+
             return;
 
         }
@@ -134,9 +185,9 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     for (int i = 0; i < 3; i++) {
         data_geometry dg_out;
 
-        (*state.vertex_shader)(dv_0, dg_out, state.uniform_data);
+        (*state.vertex_shader)(dv_0, dg_out, state.uniform_data); // Hit up the vertex shader. This should give us a correct gl_Position to reference later on.
 
-        dg_outs.push_back(dg_out);
+        dg_outs.push_back(dg_out);                                // Add the new-found data_geometry to our vector
 
     }
 
@@ -147,11 +198,18 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     upper_x_bound = state.image_width;
     upper_y_bound = state.image_height;
 
+    std::cout << "lx " << lower_x_bound << " ux " << upper_x_bound << " ly " << lower_y_bound << " uy " << upper_y_bound << std::endl;
+
     for (int i = lower_x_bound; i < upper_x_bound; i++) {
         for (int j = lower_y_bound; j < upper_y_bound; j++) {
 
-            if (intersect_triangle(dg_outs[0], dg_outs[1], dg_outs[2], vec2(i,j))) {
-                state.image_color[((j) * state.image_height) + i] = make_pixel(255,0,0);
+            //std::cout << "Checking " << i << ", " << j << std::endl;
+            float triangle_area = -1;
+
+            if (intersect_triangle(state, dg_outs[0], dg_outs[1], dg_outs[2], vec2(i,j), triangle_area)) {
+
+                //std::cout << "Coloring..." << std::endl;
+                state.image_color[((j) * state.image_height) + i] = make_pixel(255,255,255); // If the intersection routine comes back true, color the current pixel. //TODO: set color correctly
             }
         }
     }
