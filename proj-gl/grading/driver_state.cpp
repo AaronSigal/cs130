@@ -14,11 +14,11 @@ float area(vec2 a, vec2 b, vec2 c) {
 }
 
 
-bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, data_geometry c, vec2 point, float triangle_area) {
+bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, data_geometry c, vec2 point, float triangle_area, float alpha, float beta, float gamma) {
 
 
     // Barycentric weights
-    float alpha, beta, gamma;
+    //float alpha, beta, gamma;
     vec2 A, B, C;
 
     /*
@@ -77,7 +77,7 @@ void initialize_render(driver_state& state, int width, int height)
     state.image_width=width;
     state.image_height=height;
     state.image_color = new pixel[width * height]; // We have (width * height) number of pixels, and as such, need to store that many pieces of color information
-    state.image_depth=0;
+    state.image_depth = new float[width * height];
 
     for (int i = 0; i < width * height; i++) {
         //delete state.image_color[i];
@@ -178,17 +178,41 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     upper_x_bound = state.image_width;
     upper_y_bound = state.image_height;
 
+    data_fragment d_f;
+    data_output d_o;
+
     //std::cout << "lx " << lower_x_bound << " ux " << upper_x_bound << " ly " << lower_y_bound << " uy " << upper_y_bound << std::endl;
     for (int i = lower_x_bound; i < upper_x_bound; i++) {
         for (int j = lower_y_bound; j < upper_y_bound; j++) {
         
             //std::cout << "Checking " << i << ", " << j << std::endl;
-            float triangle_area = -1;
+            float triangle_area = -1; // To be calculated via intersect trinagle using pass-by-reference
 
-            if (intersect_triangle(state, *in[0], *in[1], *in[2], vec2(float(i + 0.5) , float(j + 0.5) ), triangle_area)) {
+            float alpha, beta, gamma; // To be calculated via intersect triangle using pass-by-reference
+
+            if (intersect_triangle(state, *in[0], *in[1], *in[2], vec2(float(i + 0.5) , float(j + 0.5) ), triangle_area, alpha, beta, gamma)) {
+
+                float depth = (alpha * in[0] -> gl_Position[2] / in[0] -> gl_Position[3]) + (beta * in[1] -> gl_Position[2] / in[1] -> gl_Position[3]) + (gamma * in[2] -> gl_Position[2] / in[2] -> gl_Position[3]);
 
                 //std::cout << "Coloring..." << std::endl;
-                state.image_color[((j) * state.image_width) + i] = make_pixel(255,255,255); // If the intersection routine comes back true, color the current pixel. //TODO: set color correctly
+                d_f.data = new float[state.floats_per_vertex];
+
+                for (int k = 0; k < state.floats_per_vertex; k++) {
+                    if (state.interp_rules[k] == interp_type::noperspective) { // Simple interpolation case. Handle first.
+                        d_f.data[k] = (alpha * in[0] -> data[k]) + (beta * in[1] -> data[k]) + (gamma * in[2] -> data[k]); // Perform simple interpolation.
+                    
+                    } else if (state.interp_rules[k] == interp_type::smooth) {
+                        float delta = (alpha / in[0] -> gl_Position[3]) + (beta / in[1] -> gl_Position[3]) + (gamma / in[2] -> gl_Position[3]); // Caluclate the final term
+
+                        d_f.data[k] = (alpha / in[0] -> gl_Position[3] / delta * in[0] -> data[k]) + (beta / in[1] -> gl_Position[3] / delta * in[1] -> data[k]) + (gamma / in[2]->gl_Position[3] / delta * in[2] -> data[k]); // Perform the interpolation on data[k]
+                    } else if (state.interp_rules[k] == interp_type::flat) { // Trivial case. No interpolation performed
+                        d_f.data[k] = in[0] -> data[k]; // Pass the data through, unmolested.
+                    }
+                }
+                
+                state.image_color[((j) * state.image_width) + i] = make_pixel(d_o.output_color[0] * 255, d_o.output_color[1] * 255, d_o.output_color[2] * 255);// If the intersection routine comes back true, color the current pixel. //TODO: set color correctly
+                state.image_depth[((j) * state.image_width) + i] = depth;
+                state.fragment_shader(d_f, d_o, state.uniform_data);
             }
         }
     }
