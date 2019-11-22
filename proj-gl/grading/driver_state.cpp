@@ -82,9 +82,10 @@ void initialize_render(driver_state& state, int width, int height)
     for (int i = 0; i < width * height; i++) {
         //delete state.image_color[i];
         state.image_color[i] = pixel(make_pixel(0,0,0));
+        state.image_depth[i] = 1;
     }
 
-    std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
+    //std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
 }
 
 // This function will be called to render the data that has been stored in this class.
@@ -95,7 +96,7 @@ void initialize_render(driver_state& state, int width, int height)
 //   render_type::fan -      The vertices are to be interpreted as a triangle fan.
 //   render_type::strip -    The vertices are to be interpreted as a triangle strip.
 void render(driver_state& state, render_type type) {
-    std::cout<<"TODO: implement rendering."<<std::endl;
+    //std::cout<<"TODO: implement rendering."<<std::endl;
 
     data_geometry dg[3]; // Create an array of size 3
     
@@ -140,13 +141,13 @@ void render(driver_state& state, render_type type) {
         for (int i = 0; i < 3 * state.num_triangles; i += 3) { // Tracks the starting point of each group of three. So i = the position of the first float in every group of three vertices.    
             for (int j = 0; j < 3; j++) {
             
-                int index = state.index_data[i +j];
+                int index = state.index_data[i +j]; // Create an index that will be scaled later on
 
-                dv[j].data = state.vertex_data + (index * state.floats_per_vertex);
-                dg[j].data = dv[j].data;
+                dv[j].data = state.vertex_data + (index * state.floats_per_vertex); // Set the data vertex's data to our scaled index
+                dg[j].data = dv[j].data;                                            // Set the data geomentry's data to our data vertex's data
 
                 // Shade our veticies
-                state.vertex_shader(dv[j], dg[j], state.uniform_data);
+                state.vertex_shader(dv[j], dg[j], state.uniform_data); // Call the vertex shader on the specific vertex data we are working on
 
             }
             clip_triangle(state, dg_ptr, 0);
@@ -158,12 +159,31 @@ void render(driver_state& state, render_type type) {
     }
 
     if (type == render_type::fan) {
+
+        data_vertex dv[3]; // We need more data vertex's for this one, so we have our own array in this case
+
+            for(int i = 0; i < state.num_vertices; i++) {
+                for(int j = 0; j < 3; j++) {
+                    
+                    if (j != 0) dv[j].data = state.vertex_data + (j * state.floats_per_vertex) + (i * state.floats_per_vertex);
+                    else dv[j].data = state.vertex_data;
+
+                    dg[j].data = dv[j].data;
+                    state.vertex_shader(dv[j], dg[j], state.uniform_data); // Call the vertex shader on the specific data vertex we just created
     
+                    
+                }
+                clip_triangle(state, dg_ptr, 0);
+             
+             }
+        
         return;
     }
 
     if (type == render_type::strip) {
-    
+
+        data_vertex dv[3]; // We need more data vertex's for this one, so we have our own array in this case
+        
         return;
     }
 }
@@ -215,25 +235,27 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 
                 float depth = (alpha * in[0] -> gl_Position[2] / in[0] -> gl_Position[3]) + (beta * in[1] -> gl_Position[2] / in[1] -> gl_Position[3]) + (gamma * in[2] -> gl_Position[2] / in[2] -> gl_Position[3]);
 
+                if (depth < state.image_depth[(j * state.image_width) + i]) {
                 //std::cout << "Coloring..." << std::endl;
-                d_f.data = new float[state.floats_per_vertex];
+                    d_f.data = new float[state.floats_per_vertex];
 
-                for (int k = 0; k < state.floats_per_vertex; k++) {
-                    if (state.interp_rules[k] == interp_type::noperspective) { // Simple interpolation case. Handle first.
-                        d_f.data[k] = (alpha * in[0] -> data[k]) + (beta * in[1] -> data[k]) + (gamma * in[2] -> data[k]); // Perform simple interpolation.
-                    
-                    } else if (state.interp_rules[k] == interp_type::smooth) {
-                        float delta = (alpha / in[0] -> gl_Position[3]) + (beta / in[1] -> gl_Position[3]) + (gamma / in[2] -> gl_Position[3]); // Caluclate the final term
+                    for (int k = 0; k < state.floats_per_vertex; k++) {
+                        if (state.interp_rules[k] == interp_type::noperspective) { // Simple interpolation case. Handle first.
+                            d_f.data[k] = (alpha * in[0] -> data[k]) + (beta * in[1] -> data[k]) + (gamma * in[2] -> data[k]); // Perform simple interpolation.
+                        
+                        } else if (state.interp_rules[k] == interp_type::smooth) {
+                            float delta = (alpha / in[0] -> gl_Position[3]) + (beta / in[1] -> gl_Position[3]) + (gamma / in[2] -> gl_Position[3]); // Caluclate the final term
 
-                        d_f.data[k] = (alpha / in[0] -> gl_Position[3] / delta * in[0] -> data[k]) + (beta / in[1] -> gl_Position[3] / delta * in[1] -> data[k]) + (gamma / in[2]->gl_Position[3] / delta * in[2] -> data[k]); // Perform the interpolation on data[k]
-                    } else if (state.interp_rules[k] == interp_type::flat) { // Trivial case. No interpolation performed
-                        d_f.data[k] = in[0] -> data[k]; // Pass the data through, unmolested.
+                            d_f.data[k] = (alpha / in[0] -> gl_Position[3] / delta * in[0] -> data[k]) + (beta / in[1] -> gl_Position[3] / delta * in[1] -> data[k]) + (gamma / in[2]->gl_Position[3] / delta * in[2] -> data[k]); // Perform the interpolation on data[k]
+                        } else if (state.interp_rules[k] == interp_type::flat) { // Trivial case. No interpolation performed
+                            d_f.data[k] = in[0] -> data[k]; // Pass the data through, unmolested.
+                        }
                     }
+                    
+                    state.image_color[(j * state.image_width) + i] = make_pixel(d_o.output_color[0] * 255, d_o.output_color[1] * 255, d_o.output_color[2] * 255);// If the intersection routine comes back true, color the current pixel. //TODO: set color correctly
+                    state.image_depth[(j * state.image_width) + i] = depth;
+                    state.fragment_shader(d_f, d_o, state.uniform_data);
                 }
-                
-                state.image_color[((j) * state.image_width) + i] = make_pixel(d_o.output_color[0] * 255, d_o.output_color[1] * 255, d_o.output_color[2] * 255);// If the intersection routine comes back true, color the current pixel. //TODO: set color correctly
-                state.image_depth[((j) * state.image_width) + i] = depth;
-                state.fragment_shader(d_f, d_o, state.uniform_data);
             }
         }
     }
