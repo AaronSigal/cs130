@@ -97,11 +97,13 @@ void initialize_render(driver_state& state, int width, int height)
 void render(driver_state& state, render_type type) {
     std::cout<<"TODO: implement rendering."<<std::endl;
 
+    data_geometry dg[3]; // Create an array of size 3
+    
+    const data_geometry * dg_ptr[3] = {&dg[0], &dg[1], &dg[2]};
+
         if (type == render_type::triangle) {
 
-            data_geometry dg[3]; // Create an array of size 3
             data_vertex dv;      // Used to vertex shade the above data_geometry
-            const data_geometry * dg_ptr[3] = {&dg[0], &dg[1], &dg[2]};
 
             for (int i = 0; i < state.num_vertices * state.floats_per_vertex; i += 3 * state.floats_per_vertex) { // Tracks the starting point of each group of three. So i = the position of the first float in every group of three vertices.
                 
@@ -111,7 +113,7 @@ void render(driver_state& state, render_type type) {
                     state.vertex_shader(dv, dg[j], state.uniform_data);               // Shade the data_geometry using the data_vertex
                 }
 
-                clip_triangle(state, dg_ptr, 6); // TODO: Update when clipping is ready
+                clip_triangle(state, dg_ptr, 0); // TODO: Update when clipping is ready
 
                if (DEBUG) {
                    std::cout << "vertex_data:\n ";
@@ -132,7 +134,26 @@ void render(driver_state& state, render_type type) {
     }
 
     if (type == render_type::indexed) {
+
+        data_vertex dv[3]; // We need more data vertex's for this one, so we have our own array in this case
     
+        for (int i = 0; i < 3 * state.num_triangles; i += 3) { // Tracks the starting point of each group of three. So i = the position of the first float in every group of three vertices.    
+            for (int j = 0; j < 3; j++) {
+            
+                int index = state.index_data[i +j];
+
+                dv[j].data = state.vertex_data + (index * state.floats_per_vertex);
+                dg[j].data = dv[j].data;
+
+                // Shade our veticies
+                state.vertex_shader(dv[j], dg[j], state.uniform_data);
+
+            }
+            clip_triangle(state, dg_ptr, 0);
+
+        }
+
+
         return;
     }
 
@@ -161,7 +182,7 @@ void clip_triangle(driver_state& state, const data_geometry* in[3],int face)
         rasterize_triangle(state, in);
         return;
     }
-    std::cout<<"TODO: implement clipping. (The current code passes the triangle through without clipping them.)"<<std::endl;
+    //std::cout<<"TODO: implement clipping. (The current code passes the triangle through without clipping them.)"<<std::endl;
     clip_triangle(state,in,face+1);
 }
 
