@@ -2,6 +2,10 @@
 #include <cstring>
 #include <vector>
 
+bool DEBUG_PIXEL = false;
+const int DEBUG_X = 160;
+const int DEBUG_Y = 120;
+
 void read_data(float * vertex_data, int floats_per_vertex, int index, float* data_out) {
     for (int i = index; i < index + floats_per_vertex; i++) {
         data_out[i - index] = vertex_data[i];
@@ -14,18 +18,10 @@ float area(vec2 a, vec2 b, vec2 c) {
 }
 
 
-bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, data_geometry c, vec2 point, float triangle_area, float alpha, float beta, float gamma) {
-
+bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, data_geometry c, vec2 point, float triangle_area, float &alpha, float &beta, float &gamma) { 
 
     // Barycentric weights
-    //float alpha, beta, gamma;
     vec2 A, B, C;
-
-    /*
-    A = vec2(a.gl_Position[0], a.gl_Position[1]) / a.gl_Position[3];
-    B = vec2(b.gl_Position[0], b.gl_Position[1]) / a.gl_Position[3];
-    C = vec2(c.gl_Position[0], c.gl_Position[1]) / a.gl_Position[3];
-    */
 
     A = vec2(  ( a.gl_Position[0] / a.gl_Position[3] + 1)  * 0.5 * state.image_width,
                ( a.gl_Position[1] / a.gl_Position[3] + 1) * 0.5 * state.image_height);
@@ -45,17 +41,16 @@ bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, da
     beta  = area(A, point, C) * inverse_area;
     gamma = area(A, B, point) * inverse_area;
 
-
-
-    /* std::cout << "alpha: " << alpha << " "
+    if (DEBUG_PIXEL) std::cout << "alpha: " << alpha << " "
               << "beta:"   << beta  << " "
-              << "gamea: " << gamma << "\n"; */
+              << "gamea: " << gamma << "\n";
 
     if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-        //std::cout << "Point passed!" << std::endl;
+        if (DEBUG_PIXEL) std::cout << "Point passed!" << std::endl;
         return true;
     }
 
+    if (DEBUG_PIXEL) std::cout << "Point failed!" << std::endl;
     return false;
 }
 
@@ -225,41 +220,44 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     //std::cout << "lx " << lower_x_bound << " ux " << upper_x_bound << " ly " << lower_y_bound << " uy " << upper_y_bound << std::endl;
     for (int i = lower_x_bound; i < upper_x_bound; i++) {
         for (int j = lower_y_bound; j < upper_y_bound; j++) {
+
+            if (DEBUG && i == DEBUG_X && j == DEBUG_Y) DEBUG_PIXEL = true;
+            else DEBUG_PIXEL = false;
         
             //std::cout << "Checking " << i << ", " << j << std::endl;
             float triangle_area = -1; // To be calculated via intersect trinagle using pass-by-reference
 
-            float alpha, beta, gamma; // To be calculated via intersect triangle using pass-by-reference
+            float alpha = 0, beta = 0, gamma = 0; // To be calculated via intersect triangle using pass-by-reference
 
-            if (intersect_triangle(state, *in[0], *in[1], *in[2], vec2(float(i + 0.5) , float(j + 0.5) ), triangle_area, alpha, beta, gamma)) {
+            if (intersect_triangle(state, *in[0], *in[1], *in[2], vec2(float(i) + 0.5, float(j) + 0.5), triangle_area, alpha, beta, gamma)) {
+
+                if (DEBUG_PIXEL) std::cout << "Alpha: " << alpha << " Beta: " << beta << " Gamma: " << gamma << std::endl;
 
                 float depth = (alpha * in[0] -> gl_Position[2] / in[0] -> gl_Position[3]) + (beta * in[1] -> gl_Position[2] / in[1] -> gl_Position[3]) + (gamma * in[2] -> gl_Position[2] / in[2] -> gl_Position[3]);
 
+                if (DEBUG_PIXEL) std::cout << "Depth: " << depth << std::endl;
+
                 if (depth < state.image_depth[(j * state.image_width) + i]) {
-                //std::cout << "Coloring..." << std::endl;
+
                     d_f.data = new float[state.floats_per_vertex];
-
-
 
                     for (int k = 0; k < state.floats_per_vertex; k++) {
                         
-
-
                         if (state.interp_rules[k] == interp_type::noperspective) { // Simple interpolation case. Handle first.
                             d_f.data[k] = (alpha * in[0] -> data[k]) + (beta * in[1] -> data[k]) + (gamma * in[2] -> data[k]); // Perform simple interpolation.
                             
-                            //if (DEBUG) std::cout << "interpolation type: noperspective" << std::endl;
+                            if (DEBUG_PIXEL) std::cout << "interpolation type: noperspective" << std::endl;
 
                         } else if (state.interp_rules[k] == interp_type::smooth) {
                             float delta = (alpha / in[0] -> gl_Position[3]) + (beta / in[1] -> gl_Position[3]) + (gamma / in[2] -> gl_Position[3]); // Caluclate the final term
 
                             d_f.data[k] = (alpha / in[0] -> gl_Position[3] / delta * in[0] -> data[k]) + (beta / in[1] -> gl_Position[3] / delta * in[1] -> data[k]) + (gamma / in[2]->gl_Position[3] / delta * in[2] -> data[k]); // Perform the interpolation on data[k]
                         
-                            //if (DEBUG) std::cout << "interpolation type: smooth" << std::endl;
+                            if (DEBUG_PIXEL) std::cout << "interpolation type: smooth" << std::endl;
                         } else if (state.interp_rules[k] == interp_type::flat) { // Trivial case. No interpolation performed
                             d_f.data[k] = in[0] -> data[k]; // Pass the data through, unmolested.
                         
-                            //if (DEBUG) std::cout << "interpolation type: flat" << std::endl;
+                            if (DEBUG_PIXEL) std::cout << "interpolation type: flat" << std::endl;
                         }
                     }
                     
