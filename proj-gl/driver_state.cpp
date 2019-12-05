@@ -3,13 +3,17 @@
 #include <vector>
 
 bool DEBUG_PIXEL = false;
-const int DEBUG_X = 160;
-const int DEBUG_Y = 120;
+const int DEBUG_X = 48;
+const int DEBUG_Y = 50;
 
 void read_data(float * vertex_data, int floats_per_vertex, int index, float* data_out) {
     for (int i = index; i < index + floats_per_vertex; i++) {
         data_out[i - index] = vertex_data[i];
     }
+}
+
+float distance(vec3 a, vec3 b) {
+    return sqrt( std::pow(b[0] - a[0], 2) + std::pow(b[1] - a[1], 2) + std::pow(b[2] - a[2], 2));
 }
 
 // Area = 0.5*((bx*cy - cx*by) - (ax*cy - cx*ay) + (ax*by - bx*ay)) 
@@ -164,7 +168,7 @@ void render(driver_state& state, render_type type) {
                     else dv[j].data = state.vertex_data;
 
                     dg[j].data = dv[j].data;
-                    
+
                     state.vertex_shader(dv[j], dg[j], state.uniform_data); // Call the vertex shader on the specific data vertex we just created
     
                     
@@ -259,9 +263,9 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 
                 float depth = (alpha * in[0] -> gl_Position[2] / in[0] -> gl_Position[3]) + (beta * in[1] -> gl_Position[2] / in[1] -> gl_Position[3]) + (gamma * in[2] -> gl_Position[2] / in[2] -> gl_Position[3]);
 
-                if (DEBUG_PIXEL) std::cout << "Depth: " << depth << std::endl;
+                if (DEBUG_PIXEL) std::cout << "Depth: " << depth << " ; Image depth: " << state.image_depth[(j * state.image_width) + i] << std::endl;
 
-                if (depth < state.image_depth[(j * state.image_width) + i]) {
+                if (depth < state.image_depth[(j * state.image_width) + i] && depth >= -1) {
 
                     d_f.data = new float[state.floats_per_vertex];
 
