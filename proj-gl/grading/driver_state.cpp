@@ -40,25 +40,6 @@ bool intersect_triangle(driver_state& state,data_geometry a, data_geometry b, da
     alpha = area(point,B, C) * inverse_area;
     beta  = area(A, point, C) * inverse_area;
     gamma = area(A, B, point) * inverse_area;
-    
-
-    /*
-    vec3 w = {a.gl_Position[3], b.gl_Position[3], c.gl_Position[3]};
-
-    float d, a0, a1, b0, b1, c0, c1, depth;
-    a0 = ((float)((state.image_width / 2) * a.gl_Position[0] / w[0]) + (float)((state.image_width / 2) - 0.5));
-    a1 = ((float)((state.image_height / 2) * a.gl_Position[1] / w[0]) + (float)((state.image_height / 2) - 0.5));
-    b0 = ((float)((state.image_width / 2) * b.gl_Position[0] / w[1]) + (float)((state.image_width / 2) - 0.5));
-    b1 = ((float)((state.image_height / 2) * b.gl_Position[1] / w[1]) + (float)((state.image_height / 2) - 0.5));
-    c0 = ((float)((state.image_width / 2) * c.gl_Position[0] / w[2]) + (float)((state.image_width / 2) - 0.5));
-    c1 = ((float)((state.image_height / 2) * c.gl_Position[1] / w[2]) + (float)((state.image_height / 2) - 0.5));
-
-
-
-    alpha = (((float)point[0] - b0) * (c1 - b1) - ((float)point[1] - b1) * (c0 - b0)) / ((c0 - a0) * (b1 - a1) - (c1 - a1) * (b0 - a0));
-    beta = (((float)point[0] - c0) * (a1 - c1) - ((float)point[1] - c1) * (a0 - c0)) / ((c0 - a0) * (b1 - a1) - (c1 - a1) * (b0 - a0));
-    gamma = 1 - alpha - beta;
-    */
 
     if (DEBUG_PIXEL) std::cout << "alpha: " << alpha << " "
               << "beta:"   << beta  << " "
@@ -198,8 +179,33 @@ void render(driver_state& state, render_type type) {
 
         data_vertex dv[3]; // We need more data vertex's for this one, so we have our own array in this case
         
-        return;
+        int index = 0;     // The math is too complicated to do a simplified math-based iteration, so I'm being lazy and using an external index
+        
+         for(int i = 0; i < state.num_vertices - 2; i++) {
+
+            if(index != 0) { // We shouldn't do this when the index hits zero (that would cause an out of bounds exception)
+
+                index -= (2 * state.floats_per_vertex); // Move the index back by two vertex's worth
+
+            }
+
+            for(int j = 0; j < 3; j++) {
+
+                dv[j].data = state.vertex_data + index; // Grab the verticies at the current index in vertex_data
+                dg[j].data = dv[j].data;                // Copy the data over
+
+                index += state.floats_per_vertex; // Increase the index by one vertex's worth
+
+               
+
+                state.vertex_shader(dv[j], dg[j], state.uniform_data); // Call the vertex shader
+            }
+
+
+             clip_triangle(state, dg_ptr, 0);                          // Clip and render
+        }
     }
+
 }
 
 

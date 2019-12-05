@@ -164,6 +164,7 @@ void render(driver_state& state, render_type type) {
                     else dv[j].data = state.vertex_data;
 
                     dg[j].data = dv[j].data;
+                    
                     state.vertex_shader(dv[j], dg[j], state.uniform_data); // Call the vertex shader on the specific data vertex we just created
     
                     
@@ -179,8 +180,31 @@ void render(driver_state& state, render_type type) {
 
         data_vertex dv[3]; // We need more data vertex's for this one, so we have our own array in this case
         
-        return;
+        int index = 0;     // The math is too complicated to do a simplified math-based iteration, so I'm being lazy and using an external index
+        
+         for(int i = 0; i < state.num_vertices - 2; i++) {
+
+            if(index != 0) { // We shouldn't do this when the index hits zero (that would cause an out of bounds exception)
+
+                index -= (2 * state.floats_per_vertex); // Move the index back by two vertex's worth
+
+            }
+
+            for(int j = 0; j < 3; j++) {
+
+                dv[j].data = state.vertex_data + index; // Grab the verticies at the current index in vertex_data
+                dg[j].data = dv[j].data;                // Copy the data over
+
+                index += state.floats_per_vertex; // Increase the index by one vertex's worth
+
+                state.vertex_shader(dv[j], dg[j], state.uniform_data); // Call the vertex shader
+            }
+
+
+             clip_triangle(state, dg_ptr, 0);                          // Clip and render
+        }
     }
+
 }
 
 
